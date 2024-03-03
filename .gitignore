@@ -7,3 +7,6 @@ screen*
 Gemfile.lock
 *.pyc
 config.yml
+settings.py
+lib/
+intelliq/

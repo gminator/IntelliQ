@@ -3,29 +3,143 @@
 <head>
     <meta charset="utf-8">
     <title>Mendeley Python Example</title>
+
+    <!-- Bootstrap Bundle with Popper -->
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"></script>
+
+    <!-- Font Awesome CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+
+    <!-- DataTables JavaScript -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+
+    <style>
+        .popover {
+            max-width: none; /* Allow the popover to expand beyond its default max-width */
+            width: 800px; /* Set your desired width */
+        }
+    </style>
 </head>
 <body>
-<a href="/logout">Logout</a>
-<h1>{{name}}'s documents</h1>
+    
+        {% include "menu.html" %}
+    <div class="container" style="padding: 10px;">
+    
+    
 
-<table>
-    {% for doc in docs %}
-    <tr>
-        <td><a href="/document?document_id={{doc['id']}}">{{doc.title}}</a></td>
-        {% if doc.file_attached %}
-            <td><a href="/download?document_id={{doc['id']}}">Download</a></td>
-        {% endif %}
-    </tr>
-    {% endfor %}
-</table>
+        <div class="container" style="margin-top: 20px;">
+          <div class="row">
+            <div class="col">
 
-<hr>
+        <div class="progress">
+            <div class="progress-bar bg-success progress-bar-striped " role="progressbar" style="width: {{ rag_true_percentage }}%;" aria-valuenow="{{ rag_true_count }}" aria-valuemin="0" aria-valuemax="{{ total_count }}">{{ rag_true_count }} successful documents</div>
+            <div class="progress-bar bg-danger progress-bar-striped " role="progressbar" style="width: {{ rag_false_percentage }}%;" aria-valuenow="{{ rag_false_count }}" aria-valuemin="0" aria-valuemax="{{ total_count }}">{{ rag_false_count }} Failed documents</div>
+        </div>
+        <br/>
 
-<form action="/metadataLookup" method="GET">
-    DOI lookup:
-    <input type="text" name="doi">
-    <input type="submit">
-</form>
+                  <table id="documentTable" class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Rag</th>
+                            <th>Pages</th>
+                            <th>Year</th>
+                            <th>Read</th>
+                            <th>Authors</th>
+                            <th>&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doc in docs %}
+                        <tr>
+                            
+                            <td>
+                                <a class="do-popover" href="#" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="{{doc.abstract}}" data-bs-trigger="hover focus">
+                                    {{doc.title[:50]}}...
+                                </a>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ doc.type}}</span>
+                            </td>
 
+                            <td>
+                                {% if doc.id in catalog and catalog[doc.id]["rag"] %}
+                                <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                <span class="badge bg-danger">No</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if doc.id in catalog %}
+                                <span class="badge bg-info">{{catalog[doc.id]["parts"]}}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{doc.year}}
+                            </td>
+
+                            <td>
+                                {% if doc.read %}
+                                    <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-warning">No</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if doc.authors %}
+                                    {{doc.authors[0].first_name}}
+                                    {{doc.authors[0].last_name}},
+                                {% endif %}
+                            </td>
+                            
+                            <td>
+                                {% if doc.file_attached %}
+                                    <i class="fas fa-file-pdf text-info"></i>
+                                {% elif doc.abstract %}
+                                    <i class="fa-solid fa-a text-success"></i>
+                                {% elif doc.websites %}
+                                    <i class="fa-solid fa-link text-info"></i>
+                                {% else %}
+                                    <span class="badge bg-danger">Unkown</span>
+                                {% endif %}
+                            </td>
+
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+    </div>
+
+<script>
+    $(document).ready(function(){
+        // Initialize DataTable
+        var table = $('#documentTable').DataTable(
+            {
+                "drawCallback": function( settings ) {
+                    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+                    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+                        return new bootstrap.Popover(popoverTriggerEl)
+                    })
+                }
+            }
+        );
+
+    });
+</script>
 </body>
 </html>
