@@ -326,6 +326,40 @@ def generate_apa_citation(data):
     citation = f"{authors_str} ({year}). {title}. {journal_info} {website_str}"
     return citation
 
+def read_personas_from_file(file_path):
+    """
+    Read text from a file.
+
+    Args:
+        file_path (str): The path to the text file.
+
+    Returns:
+        str: The text read from the file.
+    """
+    try:
+        with open(file_path, 'r') as file:
+            text = file.read()
+        return text
+    except FileNotFoundError:
+        print("File not found.")
+        return ""
+
+def write_personas_to_file(file_path, personas):
+    """
+    Write personas to a text file.
+
+    Args:
+        file_path (str): The path to the text file.
+        personas (list): A list of personas to write to the file.
+    """
+    try:
+        with open(file_path, 'w') as file:
+            file.write(personas)
+        print("Personas have been written to the file.")
+    except IOError:
+        print("Error writing to the file.")
+
+
 def respond_to_prompt(question):
     db = Chroma(persist_directory=CROMA_PATH, embedding_function=OpenAIEmbeddings())
     results = db.similarity_search_with_relevance_scores(question, k=20)
@@ -333,8 +367,8 @@ def respond_to_prompt(question):
     if len(results) == 0 or results[0][1] < 0.7:
         return f"Mmmmm 🤔 I don't seem to have any information on this topic..."
 
-    #persona = "You are a research academic research assistant for university students. You will answer any questions in a helpful, factual way. Be strict about how you reference the context, and don't make loose connections. You will be helping students with academic papers. You will not produce content for articles; instead, you will only provide literature reviews. Start each response with "This is what the literature has to say on the matter," and always give more than one view on a topic, taking opposing viewpoints:"
-    persona = "I want to have a conversation with you, as if you are Sigmund freud.  I would to know more about your theory on defence mechanisms and how you understand people "
+    persona = read_personas_from_file("lib/whoami.txt")
+
     PROMPT_TEMPLATE="""
     {persona}
     {context}

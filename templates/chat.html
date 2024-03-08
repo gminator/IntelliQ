@@ -29,6 +29,22 @@
 
     <div class="container mt-4">
         <h2 class="mb-4">Chat Client</h2>
+      <!-- Your existing HTML code -->
+<div class="input-group mt-2">
+    <span class="input-group-text">GPT Instructions</span>
+    <textarea class="form-control" id="gpt-instructions" rows="3" placeholder="Enter GPT instructions...">{{whoami}}</textarea>
+</div>
+
+<button id="send-button" class="btn btn-primary mt-2 float-right" onclick="sendInstructions()">Update IntelliQ</button>
+
+<div id="loading-indicator" class="text-primary d-none" role="status" style="padding-left: 10px;padding-top: 5px;">
+    <i class="fa-solid fa-spinner fa-spin fa-2xl"></i>
+    <span class="visually-hidden">Loading...</span>
+</div>
+<!-- Your existing JavaScript code -->
+<br/><br/>
+
+
         <div id="chat-box" class="mb-4"></div>
         <div class="input-group">
             <input type="text" id="message-input" class="form-control" placeholder="Type your message...">
@@ -135,6 +151,38 @@
             sendMessage();
         }
     });
+
+    function sendInstructions() {
+    const instructionsInput = document.getElementById('gpt-instructions');
+    const instructions = instructionsInput.value.trim();
+    if (instructions !== '') {
+        // Show loading indicator
+        document.getElementById('loading-indicator').classList.remove('d-none');
+        // Send the instructions to the server via AJAX
+        $.ajax({
+            type: 'POST',
+            url: '/updategpt',
+            data: { instructions: instructions },
+            success: function(response) {
+                // Hide loading indicator
+                document.getElementById('loading-indicator').classList.add('d-none');
+                // Format new lines to <br> tags in the response
+                const formattedResponse = response.message.replace(/\n/g, '<br>');
+                // Append the formatted response from the server to the chat window
+                appendMessage(formattedResponse, 'IntelliQ', true);
+            },
+            error: function(xhr, status, error) {
+                // Hide loading indicator
+                document.getElementById('loading-indicator').classList.add('d-none');
+                console.error('Error:', error);
+                // Show error message in the chat window
+                appendMessage('An error occurred. Please try again.', 'System', false);
+            }
+        });
+        //instructionsInput.value = '';
+    }
+}
+
 </script>
 
 

@@ -72,10 +72,8 @@
                             <ul class="list-unstyled">
                                 {% for f in doc['files'].list().items %}
                                     <li>
-                                        <a class="btn btn-primary btn-sm" href="{{ f.download_url }}">
-                                                <i class="fas fa-file-pdf"></i> {{ f.file_name|title}}
-                                            </a>
-
+                                         <iframe src="{{ f.download_url }}" width="800px" height="600px"></iframe>
+                                        
                                     </li>
                                 {% endfor %}
                             </ul>

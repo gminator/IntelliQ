@@ -147,13 +147,28 @@ app.secret_key = config['clientSecret']
 
 mendeley = Mendeley(config['clientId'], config['clientSecret'], REDIRECT_URI)
 
+@app.route('/updategpt', methods=['POST'])
+def updategpt():
+    if 'instructions' in request.form:
+        instructions = request.form['instructions']
+        # Handle GPT instructions here
+
+        # Write the GPT instructions to a file
+        write_personas_to_file('lib/whoami.txt', instructions)
+
+        # Your logic for responding to the GPT instructions goes here
+        response_message = "GPT instructions have been received."
+    return jsonify({'message': 1})
+
 
 
 @app.route('/assistant')
 def assistant():
     # This route will handle the assistant chat interface
     catalog = load_catalog_metadata()
-    return render_template('chat.html', catalog=catalog)
+    whoami=read_personas_from_file("lib/whoami.txt")
+
+    return render_template('chat.html', catalog=catalog,whoami=whoami)
 
 @app.route('/respond', methods=['POST'])
 def respond():
